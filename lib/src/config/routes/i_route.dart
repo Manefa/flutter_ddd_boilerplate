@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
-import '/src/presentation/views/home/home_screen.dart';
-import '/src/presentation/views/settings/settings_screen.dart';
+import 'package:flutter_boilerplate/src/ui/home/page/home_page.dart';
+
 
 class IRoute {
   static const String root = "/";
-  static const String settingsRoute = "/settings";
 
   static Route onGenerateRoutes(RouteSettings settings) {
     switch (settings.name) {
       case root:
-        return _materialRoute(const HomeScreen());
-      case settingsRoute:
-        return _materialRoute(const SettingsScreen());
+        return _materialRoute(const HomePage());
       default:
         return _materialRoute(const SizedBox());
     }

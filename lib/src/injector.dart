@@ -1,11 +1,16 @@
-import 'package:flutter_boilerplate/src/data/datasources/remote/sample_api_service.dart';
-import 'package:flutter_boilerplate/src/data/repositories/sample_repository_impl.dart';
-import 'package:flutter_boilerplate/src/domain/repositories/sample_repository.dart';
-import 'package:flutter_boilerplate/src/domain/usecases/sample_use_case.dart';
+import 'package:flutter_boilerplate/src/core/platforms/dio_http_client/dio_http_client.dart';
+import 'package:flutter_boilerplate/src/core/platforms/local_storage/local_storage.dart';
+import 'package:flutter_boilerplate/src/core/platforms/network_info/network_info.dart';
+import 'package:flutter_boilerplate/src/data/number_trivia/datasources/local/number_trivia_local_db_service.dart';
+import 'package:flutter_boilerplate/src/data/number_trivia/datasources/remote/number_trivia_api_service.dart';
+import 'package:flutter_boilerplate/src/data/number_trivia/repositories/number_trivia_repository_impl.dart';
+import 'package:flutter_boilerplate/src/domain/number_trivia/repositories/number_trivia_repository.dart';
+import 'package:flutter_boilerplate/src/domain/number_trivia/usecases/get_concrete_number_trivia.dart';
+import 'package:flutter_boilerplate/src/domain/number_trivia/usecases/get_random_number_trivia.dart';
 import 'package:get_it/get_it.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '/src/data/datasources/remote/dio_http_client.dart';
-import '/src/data/datasources/local/local_storage.dart';
 
 final GetIt injector = GetIt.instance;
 
@@ -13,15 +18,29 @@ Future<void> initializeDependencies() async {
   /// Register service locators
   ///
   /// Misc
-  injector.registerSingleton<LocalStorage>(LocalStorage());
-  injector.registerSingleton<DioHttpClient>(DioHttpClient());
+  final sharedPreferences = await SharedPreferences.getInstance();
+  injector.registerLazySingleton(() => sharedPreferences);
+  injector.registerLazySingleton<LocalStorage>(() => LocalStorage(pref: injector()));
+  injector.registerLazySingleton<DioHttpClient>(() => DioHttpClient());
+  injector.registerLazySingleton(() => InternetConnectionChecker());
+  injector.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(injector()));
+
 
   /// Register services
-  injector.registerSingleton<SampleApiService>(SampleApiService(injector()));
+    /// Number Trivia
+  injector.registerLazySingleton<NumberTriviaApiService>(() => NumberTriviaApiService(client: injector(),));
+
+  injector.registerLazySingleton<NumberTriviaLocalDbService>(() =>NumberTriviaLocalDbService(injector()));
 
   /// Register repositories
-  injector.registerSingleton<SampleRepository>(SampleRepositoryImpl(injector()));
+  injector.registerLazySingleton<NumberTriviaRepository>( () => NumberTriviaRepositoryImpl(
+    remoteNumberTrivia: injector(),
+    localNumberTrivia: injector(),
+    networkInfo: injector(),
+  ));
 
   /// Register use cases
-  injector.registerSingleton<SampleUseCase>(SampleUseCase(injector()));
+  injector.registerLazySingleton<GetRandomNumberTriviaUseCase>( () => GetRandomNumberTriviaUseCase(injector()));
+  injector.registerLazySingleton<GetConcreteNumberTriviaUseCase>( () => GetConcreteNumberTriviaUseCase(injector()));
+
 }

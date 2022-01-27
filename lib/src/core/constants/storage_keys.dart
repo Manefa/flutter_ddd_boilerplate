@@ -1,3 +1,3 @@
-abstract class StorageKeys {
-  static const String example = "example-key";
+mixin StorageKeys {
+  static const String cachedNumberTrivia = "CACHED_NUMBER_TRIVIA";
 }
